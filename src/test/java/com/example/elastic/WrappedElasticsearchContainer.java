@@ -5,7 +5,7 @@ import org.testcontainers.elasticsearch.ElasticsearchContainer;
 
 public class WrappedElasticsearchContainer extends ElasticsearchContainer {
 
-    private static final String ELASTIC_SEARCH_DOCKER = "elasticsearch:6.4.3";
+    private static final String ELASTIC_SEARCH_DOCKER = "elasticsearch:7.12.1";
 
     private static final String CLUSTER_NAME = "cluster.name";
 

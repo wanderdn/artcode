@@ -11,10 +11,7 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.kafka.support.serializer.JsonSerializer;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 
 @Slf4j
@@ -46,31 +43,35 @@ public class TestAvroProducer {
 
     public void createProducer(final String bootstrapServer) {
 
-        Map props = createProducerProperties(bootstrapServer);
-        createTopic(props);
+        Map<String, Object> props = createProducerProperties(bootstrapServer);
+        createTopic(bootstrapServer);
         System.out.println(bootstrapServer);
-        KafkaProducer<String, ValidationDTO> producer = new KafkaProducer<>(props);
+        KafkaProducer<String, Object> producer = new KafkaProducer<>(props);
 
         long numberOfEvents = 5;
         for (int i = 0; i < numberOfEvents; i++) {
             String key = UUID.randomUUID().toString();
-            ProducerRecord<String, ValidationDTO> record = new ProducerRecord<>(
+            ProducerRecord<String, Object> record = new ProducerRecord<>(
                     (String) props.get("input.topic.name"), key, movie);
             try {
-                log.error(String.valueOf(producer.send(record).get().offset()));
+                producer.send(record).get();
 //                log.error("{}",record.value());
             } catch (InterruptedException | ExecutionException e) {
                 e.printStackTrace();
             }
-//            System.out.printf("key = %s, value = %s\n", key, movie);
         }
 
         producer.close();
     }
 
-    private void createTopic(Map map) {
-        AdminClient kafkaAdmin = AdminClient.create(map);
-        kafkaAdmin.createTopics(List.of(new NewTopic(map.get("input.topic.name").toString(), 1, (short) 1)));
+    private void createTopic(String map) {
+        Map<String, Object> conf = new HashMap<>();
+        conf.put("bootstrap.servers", map);
+        AdminClient client = AdminClient.create(conf);
+        List<NewTopic> topics = new ArrayList<>();
+        topics.add(new NewTopic("external-integration-message-log", 1, (short) 1
+        ));
+        client.createTopics(topics);
     }
 }
 

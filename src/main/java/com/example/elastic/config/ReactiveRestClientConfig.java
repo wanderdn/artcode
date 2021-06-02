@@ -13,7 +13,7 @@ public class ReactiveRestClientConfig {
     String host;
 
     @Bean
-    public ElasticsearchRestTemplate reactiveElasticsearchOperations() {
+    public ElasticsearchRestTemplate elasticsearchRestTemplate() {
         return new ElasticsearchRestTemplate(RestClients.create(ClientConfiguration.builder().connectedTo(host).build())
                 .rest());
     }

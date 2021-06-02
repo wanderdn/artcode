@@ -1,59 +1,59 @@
-elastic.host: localhost:9200
-
-spring:
-  application:
-    name: kafka-elastic-sink-service-2
-    cloud:
-      stream:
-        default:
-          consumer:
-            useNativeDecoding: true
-        function:
-          definition: loggerProcessor
-          bindings:
-            loggerProcessor-in-0: input
-        bindings:
-          input:
-            destination: external-integration-message-log
-            content-type: application/*+avro
-        kafka:
-          binder:
-            brokers: ${IPC_KAFKA_BROKERS}
-            applicationId: kafka-elastic-sink-service-2
-            configuration:
-              schema.registry.url: ${AVRO_SCHEMA_REGISTRY_URL}
-              key.deserializer: org.apache.kafka.common.serialization.StringDeserializer
-              value.deserializer: io.confluent.kafka.streams.serdes.avro.SpecificAvroDeserializer
-              deserialization.exception.handler: org.apache.kafka.streams.errors.LogAndContinueExceptionHandler
-        binders:
-          logger:
-            type: kafka
-            environment:
-              spring:
-                cloud.stream.kafka.binder:
-                  brokers: ${IPC_KAFKA_BROKERS}
-                  consumer-properties:
-                    group-id: kafka-elastic-sink-service-2
-                    schema.registry.url: ${AVRO_SCHEMA_REGISTRY_URL}
-                    auto.register.schemas: false
-                    specific.avro.reader: true
-                    key.deserializer: org.apache.kafka.common.serialization.StringDeserializer
-                    value.deserializer: io.confluent.kafka.streams.serdes.avro.SpecificAvroDeserializer
-                  configuration:
-                    allow.auto.create.topics: true
-
-management:
-  server:
-    port: 8787
-  endpoint:
-    metrics:
-      enabled: true
-    prometheus:
-      enabled: true
-  endpoints:
-    web:
-      exposure:
-        include: "prometheus"
-    jmx:
-      exposure:
-        include: "health,info"
+#elastic.host: localhost:9200
+#
+#spring:
+#  application:
+#    name: kafka-elastic-sink-service-2
+#    cloud:
+#      stream:
+#        default:
+#          consumer:
+#            useNativeDecoding: true
+#        function:
+#          definition: loggerProcessor
+#          bindings:
+#            loggerProcessor-in-0: input
+#        bindings:
+#          input:
+#            destination: external-integration-message-log
+#            content-type: application/*+avro
+#        kafka:
+#          binder:
+#            brokers: ${IPC_KAFKA_BROKERS}
+#            applicationId: kafka-elastic-sink-service-2
+#            configuration:
+#              schema.registry.url: ${AVRO_SCHEMA_REGISTRY_URL}
+#              key.deserializer: org.apache.kafka.common.serialization.StringDeserializer
+#              value.deserializer: io.confluent.kafka.streams.serdes.avro.SpecificAvroDeserializer
+#              deserialization.exception.handler: org.apache.kafka.streams.errors.LogAndContinueExceptionHandler
+#        binders:
+#          logger:
+#            type: kafka
+#            environment:
+#              spring:
+#                cloud.stream.kafka.binder:
+#                  brokers: ${IPC_KAFKA_BROKERS}
+#                  consumer-properties:
+#                    group-id: kafka-elastic-sink-service-2
+#                    schema.registry.url: ${AVRO_SCHEMA_REGISTRY_URL}
+#                    auto.register.schemas: false
+#                    specific.avro.reader: true
+#                    key.deserializer: org.apache.kafka.common.serialization.StringDeserializer
+#                    value.deserializer: io.confluent.kafka.streams.serdes.avro.SpecificAvroDeserializer
+#                  configuration:
+#                    allow.auto.create.topics: true
+#
+#management:
+#  server:
+#    port: 8787
+#  endpoint:
+#    metrics:
+#      enabled: true
+#    prometheus:
+#      enabled: true
+#  endpoints:
+#    web:
+#      exposure:
+#        include: "prometheus"
+#    jmx:
+#      exposure:
+#        include: "health,info"

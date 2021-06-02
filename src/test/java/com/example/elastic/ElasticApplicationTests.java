@@ -2,15 +2,20 @@ package com.example.elastic;
 
 import com.example.elastic.config.SchemaRegistryContainer;
 import com.example.elastic.config.TestAvroProducer;
+import com.example.elastic.service.LoggerProcessor;
 import com.example.elastic.starter.App;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.testcontainers.containers.KafkaContainer;
 import org.testcontainers.containers.Network;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
@@ -18,15 +23,16 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
-import java.util.UUID;
+import java.util.function.Consumer;
 
-@SpringBootTest(classes = {App.class})
-@TestPropertySource(
-        locations = "classpath:application.properties")
+
 @Testcontainers
-@TestConfiguration
+@Slf4j
+@SpringBootTest
+@ContextConfiguration(classes = App.class)
 @DirtiesContext
-@ExtendWith(SpringExtension.class)
+@ActiveProfiles(value = "test")
+//@EnableAutoConfiguration(exclude =org.springframework.boot.autoconfigure.kafka.KafkaProperties.class)
 class ElasticApplicationTests {
     public static final Network testNe = Network.newNetwork();
     @Container
@@ -40,36 +46,45 @@ class ElasticApplicationTests {
     private static final ElasticsearchContainer elasticsearchContainer =
             new WrappedElasticsearchContainer(
                     testNe);
-
-    @Test
-    void contextLoads() {
-        TestAvroProducer producer = new TestAvroProducer(schemaRegistryContainer.getSchemaRegistryUrl());
-        producer.createProducer("PLAINTEXT://0.0.0.0:" + 9092);
-        ValidationDTO validationDTO = new ValidationDTO(true, UUID.randomUUID().toString());
-//        System.out.println(container.getLogs());
-//        processor.accept(validationDTO);
-    }
+@Autowired
+    ApplicationContext context;
 
     public static SchemaRegistryContainer schemaRegistryContainer(KafkaContainer container) {
         return new SchemaRegistryContainer().withKafka(container).withNetworkAliases("schema");
     }
 
+
     @BeforeAll
     public static void init() {
         container.start();
         elasticsearchContainer.start();
+        schemaRegistryContainer.start();
         System.setProperty(
                 "elastic.host",
                 elasticsearchContainer.getHttpHostAddress()
         );
         System.setProperty(
                 "spring.application.cloud.stream.kafka.binder.brokers",
-                container.getNetworkAliases().get(0) + ":9092"
+                container.getBootstrapServers()
         );
         System.setProperty(
                 "spring.application.cloud.stream.binders.logger.environment.spring.cloud.stream.kafka.binder.brokers",
-                container.getNetworkAliases().get(0) + ":9092"
+                container.getBootstrapServers()
         );
+    }
+
+
+    @Test
+    void contextLoads() {
+        LoggerProcessor processor  = (LoggerProcessor) context.getBean("loggerProcessor");
+//        log.error(System.getPro/perty("spring.application.cloud.stream.binders.logger.environment.spring.cloud.stream.kafka.binder.brokers"));
+        TestAvroProducer producer = new TestAvroProducer(schemaRegistryContainer.getSchemaRegistryUrl());
+        producer.createProducer(container.getBootstrapServers());
+        processor.accept(new ValidationDTO(false,""));
+
+//        ValidationDTO validationDTO = new ValidationDTO(true, UUID.randomUUID().toString());
+//        System.out.println(container.getLogs());
+//        processor.accept(validationDTO);
     }
 }
 
